@@ -66,3 +66,13 @@ git commit -m "feat: initial project setup"
 ```bash	
 git branch -M main
 ```
+
+## Rodar o projeto atraves do makeFile
+
+```bash	
+# Primeiro, instale o Chocolatey se ainda não tiver
+Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+
+# Depois instale o make
+choco install make
+```

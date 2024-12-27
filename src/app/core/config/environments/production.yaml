@@ -1,0 +1,6 @@
+# src/app/core/config/environments/production.yaml
+services:
+  products:
+    url: "http://products-service:8001"
+    timeout: 30
+    enabled: true
