@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+*.class
+*.so
+.Python
+.env
+.venv
+env/
+venv/
+.pytest_cache/
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Dependências e builds
+*.egg-info/
+dist/
+build/
