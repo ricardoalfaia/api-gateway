@@ -1,16 +1,19 @@
-# src/app/core/config/settings.py
 from functools import lru_cache
 from typing import Dict, Any
 import yaml
 import os
 from pathlib import Path
-from pydantic_settings import BaseSettings
 from pydantic import BaseModel
+from pydantic_settings import BaseSettings
 
 class ServiceConfig(BaseModel):
     url: str
     timeout: int = 30
     enabled: bool = True
+
+class ServerConfig(BaseModel):
+    host: str = "0.0.0.0"
+    port: int = 8000
 
 class AppConfig(BaseModel):
     name: str
@@ -25,6 +28,7 @@ class CorsConfig(BaseModel):
 class Settings(BaseSettings):
     app: AppConfig
     cors: CorsConfig
+    server: ServerConfig
     services: Dict[str, ServiceConfig]
 
     @property

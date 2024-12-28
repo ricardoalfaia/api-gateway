@@ -1,25 +1,14 @@
-.PHONY: dev test lint
+.PHONY: run dev test clean
 
-# Rodar o servidor de desenvolvimento
+run:
+	uvicorn src.app.main:app --host 0.0.0.0 --port 8000
+
 dev:
-	uvicorn app.main:app --reload --port 8000 --host 0.0.0.0
+	uvicorn src.app.main:app --reload --host 0.0.0.0 --port 8000
 
-# Rodar os testes
-test:
-	pytest
+install:
+	pip install -r requirements.txt
 
-# Formatar e verificar o código
-lint:
-	black .
-	isort .
-	ruff check .
-
-# Instalar dependências de desenvolvimento
-install-dev:
-	uv add "fastapi[all]" httpx python-dotenv pydantic-settings
-	uv add -d pytest black isort ruff
-
-# Limpar arquivos Python compilados
 clean:
-	find . -type f -name "*.py[co]" -delete
-	find . -type d -name "__pycache__" -delete
+	find . -type d -name "__pycache__" -exec rm -r {} +
+	find . -type f -name "*.pyc" -delete

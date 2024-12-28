@@ -1,23 +1,18 @@
-# src/app/main.py
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
 from src.app.core.config.settings import settings
 from src.app.services.proxy.service import ProxyService
-from src.app.api.v1 import gateway
-from fastapi import APIRouter
+from src.app.api.v1.gateway import router as gateway_router
 from datetime import datetime
-
-import httpx
-
-
-router = APIRouter()
+import uvicorn
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
-    version=settings.VERSION
+    version=settings.VERSION,
+    redirect_slashes=True
 )
 
-# CORS - Agora usando a nova estrutura de configuração
+# CORS configuration
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors.allow_origins,
@@ -26,7 +21,7 @@ app.add_middleware(
     allow_credentials=True,
 )
 
-app.include_router(gateway.router, prefix=settings.API_V1_STR)
+app.include_router(gateway_router, prefix=settings.API_V1_STR)
 
 @app.get("/")
 async def root():
@@ -45,18 +40,10 @@ async def health():
         "timestamp": datetime.utcnow().isoformat()
     }
 
-# Rotas
-
-router.api_route("/{service}/{path:path}", methods=["GET", "POST", "PUT", "DELETE"])
-async def forward_to_service(
-    service: str,
-    path: str,
-    request: Request,
-):
-    response = await proxy_service.forward_request(service, path, request)
-    return {
-        "status_code": response["status_code"],
-        "headers": response["headers"],
-        "content": response["content"]
-    }
-
+if __name__ == "__main__":
+    uvicorn.run(
+        "main:app",
+        host=settings.server.host,
+        port=settings.server.port,
+        reload=True
+    )
