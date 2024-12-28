@@ -1,6 +1,13 @@
-# src/app/core/config/environments/production.yaml
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+
 services:
   products:
     url: "http://products-service:8001"
+    timeout: 30
+    enabled: true
+  orders:
+    url: "http://orders-service:8002"
     timeout: 30
     enabled: true

@@ -1,7 +1,8 @@
 from functools import lru_cache
-from typing import Dict, Any
+from typing import Dict, Any, List
 import yaml
 import os
+import logging
 from pathlib import Path
 from pydantic import BaseModel
 from pydantic_settings import BaseSettings
@@ -11,24 +12,29 @@ class ServiceConfig(BaseModel):
     timeout: int = 30
     enabled: bool = True
 
-class ServerConfig(BaseModel):
-    host: str = "0.0.0.0"
-    port: int = 8000
-
 class AppConfig(BaseModel):
     name: str
     version: str
     api_prefix: str
 
+class ServerConfig(BaseModel):
+    host: str = "0.0.0.0"
+    port: int = 8000
+
 class CorsConfig(BaseModel):
-    allow_origins: list[str]
-    allow_methods: list[str]
-    allow_headers: list[str]
+    allow_origins: List[str]
+    allow_methods: List[str]
+    allow_headers: List[str]
+
+class LoggingConfig(BaseModel):
+    level: str = "INFO"
+    format: str = "%(asctime)s - %(levelname)s - %(message)s"
 
 class Settings(BaseSettings):
     app: AppConfig
     cors: CorsConfig
     server: ServerConfig
+    logging: LoggingConfig
     services: Dict[str, ServiceConfig]
 
     @property
@@ -42,6 +48,13 @@ class Settings(BaseSettings):
     @property
     def VERSION(self) -> str:
         return self.app.version
+
+    def configure_logging(self):
+        """Configure logging based on settings"""
+        logging.basicConfig(
+            level=getattr(logging, self.logging.level.upper()),
+            format=self.logging.format
+        )
 
     @classmethod
     def load_config(cls) -> Dict[str, Any]:
@@ -57,7 +70,8 @@ class Settings(BaseSettings):
         if env_file.exists():
             with open(env_file) as f:
                 env_config = yaml.safe_load(f)
-                config = deep_merge(config, env_config)
+                if env_config:  # Verifica se há configurações no arquivo
+                    config = deep_merge(config, env_config)
                 
         return config
 
@@ -65,17 +79,26 @@ class Settings(BaseSettings):
         case_sensitive = True
 
 def deep_merge(base_dict: dict, update_dict: dict) -> dict:
+    """Merge recursivamente dois dicionários."""
+    if not isinstance(base_dict, dict) or not isinstance(update_dict, dict):
+        return update_dict
+
+    merged = base_dict.copy()
+    
     for key, value in update_dict.items():
-        if isinstance(value, dict) and key in base_dict:
-            base_dict[key] = deep_merge(base_dict[key], value)
+        if key in merged and isinstance(merged[key], dict) and isinstance(value, dict):
+            merged[key] = deep_merge(merged[key], value)
         else:
-            base_dict[key] = value
-    return base_dict
+            merged[key] = value
+            
+    return merged
 
 @lru_cache()
 def get_settings() -> Settings:
     config = Settings.load_config()
-    return Settings(**config)
+    settings = Settings(**config)
+    settings.configure_logging()  # Configura o logging assim que as settings são carregadas
+    return settings
 
 # Instância das configurações
 settings = get_settings()

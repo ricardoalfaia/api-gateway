@@ -2,7 +2,7 @@ from typing import Dict, Any
 from fastapi import Request, HTTPException, Response
 import httpx
 import logging
-from urllib.parse import urljoin, urlparse, parse_qs
+from urllib.parse import urljoin
 from src.app.core.config.settings import settings
 
 logging.basicConfig(
@@ -21,33 +21,37 @@ class ProxyService:
         service_config = self.services[service]
         base_url = service_config['url'].rstrip('/')
         
-        # Clean the path
-        clean_path = path.strip()
+        # Inicializa com a base da URL
+        full_path = []
         
-        # Remove API prefix if present
-        if clean_path.startswith(settings.API_V1_STR):
-            clean_path = clean_path[len(settings.API_V1_STR):].lstrip('/')
+        # Adiciona o prefixo da API se ainda não estiver no path
+        if not path.startswith(settings.API_V1_STR):
+            full_path.append(settings.API_V1_STR.strip('/'))
             
-        # Remove service name from start of path if present
-        if clean_path.startswith(f"{service}/"):
-            clean_path = clean_path[len(service)+1:]
-        elif clean_path == service:
-            clean_path = ""
+        # Adiciona o nome do serviço se ainda não estiver no path
+        if not path.startswith(f"/{service}") and service not in path:
+            full_path.append(service)
             
-        # Ensure path starts with slash if not empty
-        if clean_path and not clean_path.startswith('/'):
-            clean_path = f"/{clean_path}"
-        elif not clean_path:
-            clean_path = "/"
-            
-        # Construct final URL
-        target_url = f"{base_url}{clean_path}"
+        # Adiciona o resto do path, removendo barras duplicadas
+        clean_path = path.strip('/')
+        if clean_path and clean_path != service:
+            if clean_path.startswith(settings.API_V1_STR.strip('/')):
+                clean_path = clean_path[len(settings.API_V1_STR.strip('/')):]
+            if clean_path.startswith(service):
+                clean_path = clean_path[len(service):]
+            clean_path = clean_path.strip('/')
+            if clean_path:
+                full_path.append(clean_path)
+        
+        # Junta todos os componentes do path
+        final_path = '/'.join(full_path)
+        target_url = f"{base_url}/{final_path}"
         
         logger.debug(f"URL Construction:")
         logger.debug(f"  Base URL: {base_url}")
         logger.debug(f"  Original Path: {path}")
-        logger.debug(f"  Clean Path: {clean_path}")
-        logger.debug(f"  Final URL: {target_url}")
+        logger.debug(f"  Final Path: {final_path}")
+        logger.debug(f"  Target URL: {target_url}")
         
         return target_url
 
@@ -77,17 +81,23 @@ class ProxyService:
             logger.debug(f"Request body size: {len(body)} bytes")
             logger.debug(f"Making request to: {target_url}")
             logger.debug(f"Headers: {headers}")
+            
+            # Get query parameters
+            params = dict(request.query_params)
+            logger.debug(f"Query params: {params}")
 
             timeout = httpx.Timeout(30.0)
             async with httpx.AsyncClient(
                 follow_redirects=True,
-                timeout=timeout
+                timeout=timeout,
+                verify=False  # Desativa verificação SSL para desenvolvimento
             ) as client:
                 # Send request to target service
                 response = await client.request(
                     method=request.method,
                     url=target_url,
                     headers=headers,
+                    params=params,
                     content=body
                 )
                 
