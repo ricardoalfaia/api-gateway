@@ -58,7 +58,12 @@ class Settings(BaseSettings):
 
     @classmethod
     def load_config(cls) -> Dict[str, Any]:
-        env = os.getenv("APP_ENV", "development")
+        # Forçar o ambiente como development se não estiver explicitamente definido como production
+        env = os.environ.get("APP_ENV", "development")
+        if env != "production":
+            env = "development"
+        
+        logging.info(f"Loading configuration for environment: {env}")
         config_path = Path(__file__).parent / "environments"
         
         # Carrega configurações base
@@ -70,8 +75,9 @@ class Settings(BaseSettings):
         if env_file.exists():
             with open(env_file) as f:
                 env_config = yaml.safe_load(f)
-                if env_config:  # Verifica se há configurações no arquivo
+                if env_config:
                     config = deep_merge(config, env_config)
+                    logging.info(f"Loaded environment config: {env_config}")
                 
         return config
 
@@ -97,7 +103,7 @@ def deep_merge(base_dict: dict, update_dict: dict) -> dict:
 def get_settings() -> Settings:
     config = Settings.load_config()
     settings = Settings(**config)
-    settings.configure_logging()  # Configura o logging assim que as settings são carregadas
+    settings.configure_logging()
     return settings
 
 # Instância das configurações

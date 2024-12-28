@@ -58,11 +58,25 @@ APP_ENV=development  # ou production
 - `development.yaml`: Configurações de desenvolvimento
 - `production.yaml`: Configurações de produção
 
+## exemplo de arquivo .env
+Crie um arquivo `.env` na raiz do projeto:
+
+```env
+PROJECT_NAME="E-commerce Gateway"
+API_V1_STR="/api/v1"
+APP_ENV=development
+
+# Serviços (opcional, vai usar os valores padrão se não definidos)
+SERVICES__products="http://localhost:5000"
+```
+
 ## Executando o Projeto
 
 ### Diretamente com uvicorn
 ```bash	
 uvicorn src.app.main:app --reload --port 8000
+# informando o ambiente
+APP_ENV=development uvicorn src.app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 ### Usando make
@@ -94,6 +108,9 @@ api-gateway/
 ├── Makefile                    # Comandos automatizados
 └── README.md
 ```
+
+## Para acessar o Swagger
+- Acesse **`http://localhost:8000/docs`**
 
 ## Instalando make no Windows
 

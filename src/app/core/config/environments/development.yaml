@@ -8,6 +8,10 @@ services:
     url: "http://localhost:8001"
     timeout: 30
     enabled: true
+  category:
+    url: "http://localhost:5000"
+    timeout: 30
+    enabled: true
   orders:
     url: "http://localhost:8002"
     timeout: 30
