@@ -1,0 +1,8 @@
+PROJECT_NAME="E-commerce Gateway"
+API_V1_STR="/api/v1"
+APP_ENV=production
+
+# Serviços (opcional, vai usar os valores padrão se não definidos)
+SERVICES__products="http://localhost:8001"
+SERVICES__orders="http://localhost:8002"
+SERVICES__users="http://localhost:8003"
