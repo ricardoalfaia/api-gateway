@@ -7,7 +7,7 @@ dev:
 	uvicorn src.app.main:app --reload --host 0.0.0.0 --port 8000
 
 install:
-	uv install
+	uv sync
 
 clean:
 	find . -type d -name "__pycache__" -exec rm -r {} +
