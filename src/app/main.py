@@ -1,10 +1,9 @@
-from fastapi import FastAPI, Request, APIRouter
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from src.app.core.config.settings import settings
 from src.app.services.proxy.service import ProxyService
 from src.app.api.v1.gateway import router as gateway_router
 from datetime import datetime
-import uvicorn
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -39,11 +38,3 @@ async def health():
         "status": "healthy",
         "timestamp": datetime.utcnow().isoformat()
     }
-
-if __name__ == "__main__":
-    uvicorn.run(
-        "main:app",
-        host=settings.server.host,
-        port=settings.server.port,
-        reload=True
-    )
