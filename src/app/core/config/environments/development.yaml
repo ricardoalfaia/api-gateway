@@ -6,13 +6,23 @@ logging:
 services:
   products:
     url: "http://localhost:8001"
+    api_key: "minha_chave_secreta"
     timeout: 30
     enabled: true
   category:
     url: "http://localhost:5000"
+    api_key: "minha_chave_secreta"
     timeout: 30
     enabled: true
   orders:
     url: "http://localhost:8002"
+    api_key: "minha_chave_secreta"
     timeout: 30
     enabled: true
+
+internal_network:
+  ranges:
+    - "10.0.0.0/8"
+    - "172.16.0.0/12"
+    - "192.168.0.0/16"
+    - "127.0.0.0/8"

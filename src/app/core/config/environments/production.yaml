@@ -5,9 +5,11 @@ logging:
 services:
   products:
     url: "http://products-service:8001"
+    api_key: "minha_chave_secreta"
     timeout: 30
     enabled: true
   orders:
     url: "http://orders-service:8002"
+    api_key: "minha_chave_secreta"
     timeout: 30
     enabled: true

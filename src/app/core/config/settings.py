@@ -4,14 +4,24 @@ import yaml
 import os
 import logging
 from pathlib import Path
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from pydantic_settings import BaseSettings
 
 class ServiceConfig(BaseModel):
     url: str
     timeout: int = 30
     enabled: bool = True
+    api_key: str | None = None  # T
 
+    @field_validator('timeout')
+    def timeout_must_be_positive(cls, v):
+        if v <= 0:
+            raise ValueError('timeout must be positive')
+        return v
+class Config:
+    case_sensitive = True    
+    from_attributes = True
+    
 class AppConfig(BaseModel):
     name: str
     version: str
@@ -29,6 +39,8 @@ class CorsConfig(BaseModel):
 class LoggingConfig(BaseModel):
     level: str = "INFO"
     format: str = "%(asctime)s - %(levelname)s - %(message)s"
+class InternalNetworkConfig(BaseModel):
+    ranges: List[str]
 
 class Settings(BaseSettings):
     app: AppConfig
@@ -36,10 +48,10 @@ class Settings(BaseSettings):
     server: ServerConfig
     logging: LoggingConfig
     services: Dict[str, ServiceConfig]
-    
-     # ... suas configurações existentes ...
+    internal_network: InternalNetworkConfig   
+    # Suas configurações existentes...
     api_keys: List[str] = []
-
+    
     @property
     def PROJECT_NAME(self) -> str:
         return self.app.name
@@ -58,6 +70,36 @@ class Settings(BaseSettings):
             level=getattr(logging, self.logging.level.upper()),
             format=self.logging.format
         )
+
+    # @classmethod
+    # def load_config(cls) -> Dict[str, Any]:
+    #     env = os.environ.get("APP_ENV", "development")
+    #     if env != "production":
+    #         env = "development"
+        
+    #     logging.info(f"Loading configuration for environment: {env}")
+    #     config_path = Path(__file__).parent / "environments"
+        
+    #     try:
+    #         with open(config_path / "base.yaml") as f:
+    #             config = yaml.safe_load(f)
+                
+    #         env_file = config_path / f"{env}.yaml"
+    #         if env_file.exists():
+    #             with open(env_file) as f:
+    #                 env_config = yaml.safe_load(f)
+    #                 if env_config:
+    #                     config = deep_merge(config, env_config)
+    #                     logging.info(f"Loaded environment config: {env_config}")
+    #         return config
+    #     except yaml.YAMLError as e:
+    #         logging.error(f"Error loading YAML configuration: {e}")
+    #         raise
+    #     except Exception as e:
+    #         logging.error(f"Unexpected error loading configuration: {e}")
+    #         raise
+
+
 
     @classmethod
     def load_config(cls) -> Dict[str, Any]:
@@ -84,8 +126,7 @@ class Settings(BaseSettings):
                 
         return config
 
-    class Config:
-        case_sensitive = True
+    
 
 def deep_merge(base_dict: dict, update_dict: dict) -> dict:
     """Merge recursivamente dois dicionários."""
@@ -102,11 +143,10 @@ def deep_merge(base_dict: dict, update_dict: dict) -> dict:
             
     return merged
 
-@lru_cache()
 def get_settings() -> Settings:
     config = Settings.load_config()
     settings = Settings(**config)
-    settings.configure_logging()
+    logging.debug(f"Loaded services configuration: {settings.services}")
     return settings
 
 # Instância das configurações

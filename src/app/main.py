@@ -15,12 +15,18 @@ app = FastAPI(
 # CORS configuration
 app.add_middleware(
     CORSMiddleware,
-    InternalNetworkMiddleware,
     allow_origins=settings.cors.allow_origins,
     allow_methods=settings.cors.allow_methods,
     allow_headers=settings.cors.allow_headers,
     allow_credentials=True,
 )
+
+
+# Internal Network Middleware
+if settings.internal_network:
+    internal_ranges = settings.internal_network.ranges
+    app.add_middleware(InternalNetworkMiddleware, internal_ranges=internal_ranges)
+
 
 app.include_router(gateway_router, prefix=settings.API_V1_STR)
 
@@ -39,4 +45,16 @@ async def health():
     return {
         "status": "healthy",
         "timestamp": datetime.utcnow().isoformat()
+    }
+
+@app.get("/debug/services")
+async def debug_services():
+    return {
+        name: {
+            "url": service.url,
+            "api_key": service.api_key,
+            "enabled": service.enabled,
+            "timeout": service.timeout
+        }
+        for name, service in settings.services.items()
     }
