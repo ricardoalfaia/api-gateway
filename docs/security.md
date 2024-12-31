@@ -86,23 +86,59 @@ openssl x509 -req -in server.csr \
   -CAcreateserial -out server.crt -days 365
 
 
-Para testar a implementação do mTLS, precisamos seguir alguns passos:
+# Para windows
 
-Primeiro, vamos gerar os certificados necessários. Crie uma pasta certs no diretório raiz do projeto:
+Esse erro no Windows ocorre porque o formato dos certificados precisa ser ajustado para o sistema. 
+Vamos gerar os certificados de uma forma compatível com Windows:
+Primeiro, vamos criar os certificados com o formato correto:
 
-# 1. Gerar chave privada e certificado da CA (Certificate Authority)
-openssl req -x509 -newkey rsa:4096 -days 365 -nodes \
-  -keyout ca.key -out ca.crt \
-  -subj "/CN=My Gateway CA"
+# 1. Criar diretório (se ainda não existir)
+mkdir certs
 
-# 2. Gerar chave privada do cliente (Gateway)
-openssl genrsa -out client.key 4096
+# 2. Gerar CA
+openssl req -x509 -sha256 -days 356 -nodes -newkey rsa:2048 ^
+-keyout certs/ca.key -out certs/ca.crt ^
+-subj "/CN=My Root CA"
 
-# 3. Gerar CSR (Certificate Signing Request) do cliente
-openssl req -new -key client.key -out client.csr \
-  -subj "/CN=API Gateway"
+# 3. Gerar chave privada e CSR para o cliente (API Gateway)
+openssl req -newkey rsa:2048 -nodes ^
+-keyout certs/client.key -out certs/client.csr ^
+-subj "/CN=API Gateway Client"
 
-# 4. Assinar o certificado do cliente usando a CA
-openssl x509 -req -in client.csr \
-  -CA ca.crt -CAkey ca.key \
-  -CAcreateserial -out client.crt -days 365
+# 4. Gerar certificado do cliente usando a CA
+openssl x509 -req -sha256 -days 365 ^
+-in certs/client.csr ^
+-CA certs/ca.crt -CAkey certs/ca.key -CAcreateserial ^
+-out certs/client.crt
+
+# 5. Gerar chave privada e CSR para o servidor
+openssl req -newkey rsa:2048 -nodes ^
+-keyout certs/server.key -out certs/server.csr ^
+-subj "/CN=localhost"
+
+# 6. Gerar certificado do servidor usando a CA
+openssl x509 -req -sha256 -days 365 ^
+-in certs/server.csr ^
+-CA certs/ca.crt -CAkey certs/ca.key -CAcreateserial ^
+-out certs/server.crt
+
+# 7. Converter o certificado do cliente para PFX (formato Windows)
+openssl pkcs12 -export -out certs/client.pfx ^
+-inkey certs/client.key ^
+-in certs/client.crt ^
+-certfile certs/ca.crt ^
+-passout pass:password123
+
+
+# Agora você pode testar usando o arquivo .pfx:
+curl --cert-type P12 --cert certs/client.pfx:password123 ^
+-k https://localhost:8001
+
+
+# **Algumas observações importantes:**
+
+O -k desabilita a verificação do certificado (útil para testes)
+A senha "password123" é apenas para teste, use uma senha forte em produção
+O formato PFX/P12 é mais adequado para Windows pois inclui tanto o certificado quanto a chave privada
+
+Se você ainda tiver problemas, pode também tentar:

@@ -18,10 +18,10 @@ clean:
 
 # Comandos Docker
 docker-build:
-	docker-compose build --no-cache
+	docker-compose build 
 
 docker-build-cache:
-	docker-compose build
+	docker-compose build --no-cache  
 
 docker-up:
 	docker-compose up -d
@@ -31,6 +31,9 @@ docker-down:
 
 docker-logs:
 	docker-compose logs -f
+
+dcoker-prune: 
+	docker system prune -f
 
 docker-clean:
 	docker-compose down -v
