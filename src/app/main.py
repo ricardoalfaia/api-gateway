@@ -9,7 +9,10 @@ from datetime import datetime
 app = FastAPI(
     title=settings.PROJECT_NAME,
     version=settings.VERSION,
-    redirect_slashes=True
+    redirect_slashes=True,
+    debug=settings.performance.debug_mode,   
+    docs_url="/docs",
+    redoc_url="/redoc"
 )
 
 # CORS configuration

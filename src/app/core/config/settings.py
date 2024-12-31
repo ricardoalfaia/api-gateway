@@ -7,17 +7,30 @@ from pathlib import Path
 from pydantic import BaseModel, field_validator
 from pydantic_settings import BaseSettings
 
+class MTLSSettings(BaseModel):
+    enabled: bool = False
+    cert_path: str = "certs/client.crt"
+    key_path: str = "certs/client.key"
+    ca_path: str = "certs/ca.crt"
+
+class PerformanceConfig(BaseModel):
+    debug_mode: bool = False
+    enable_timing_middleware: bool = True
+    log_slow_requests: bool = True
+    slow_request_threshold: float = 1.0  
+
 class ServiceConfig(BaseModel):
     url: str
     timeout: int = 30
     enabled: bool = True
-    api_key: str | None = None  # T
+    api_key: str | None = None
+    require_mtls: bool = False
 
     @field_validator('timeout')
     def timeout_must_be_positive(cls, v):
         if v <= 0:
             raise ValueError('timeout must be positive')
-        return v
+        return v    
 class Config:
     case_sensitive = True    
     from_attributes = True
@@ -51,6 +64,8 @@ class Settings(BaseSettings):
     internal_network: InternalNetworkConfig   
     # Suas configurações existentes...
     api_keys: List[str] = []
+    mtls: MTLSSettings
+    performance: PerformanceConfig = PerformanceConfig() 
     
     @property
     def PROJECT_NAME(self) -> str:

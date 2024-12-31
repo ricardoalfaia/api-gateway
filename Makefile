@@ -4,7 +4,7 @@ install:
 	uv sync
 
 dev:
-	uvicorn src.app.main:app --reload --host 0.0.0.0 --port 8000
+	uvicorn src.app.main:app --reload --host 0.0.0.0 --port 8000 --workers 4
 
 run:
 	uvicorn src.app.main:app --host 0.0.0.0 --port 8000
