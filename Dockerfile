@@ -1,35 +1,28 @@
-# Use uma imagem base do Python 3.12.4 slim
-FROM python:3.12.4-slim
+FROM python:3.12-slim
 
-# Defina variáveis de ambiente
-ENV PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1 \
-    PIP_NO_CACHE_DIR=1 \
-    UV_NO_COLOR=1
-
-# Instale as dependências do sistema incluindo make
-RUN apt-get update && apt-get install -y \
-    git \
-    make \
-    && rm -rf /var/lib/apt/lists/*
-
-# Defina o diretório de trabalho
 WORKDIR /app
 
-# Clone o repositório
-RUN git clone https://github.com/ricardoalfaia/api-gateway.git .
+# Install git and cleanup
+RUN apt-get update && apt-get install -y git && \
+    rm -rf /var/lib/apt/lists/*
 
-# Copie o Makefile e o .env
-COPY Makefile .
-COPY .env .
+# Install uv
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
-# Instale o uv
-RUN pip install uv
+# Clone repository
+RUN git clone https://github.com/ricardoalfaia/api-gateway.git . 
 
-# Use o Makefile para instalar dependências e configurar o ambiente
-RUN make install
+RUN echo "PROJECT_NAME=${PROJECT_NAME:-'E-commerce Gateway'}" > .env && \
+    echo "API_V1_STR=${API_V1_STR:-'/api/v1'}" >> .env && \
+    echo "APP_ENV=${APP_ENV:-development}" >> .env && \
+    echo "SERVICES__products=${SERVICES__products:-http://localhost:8001}" >> .env
 
-# Comando para executar a aplicação usando o Makefile
-CMD ["make", "run"]
+# Install dependencies
+RUN uv pip install --system uvicorn
+RUN uv pip install --system .
 
-EXPOSE 8000
+# Define variável de ambiente
+ENV APP_ENV=development
+
+# Run application
+CMD ["python", "-m", "uvicorn", "src.app.main:app", "--host", "0.0.0.0", "--port", "8000"]

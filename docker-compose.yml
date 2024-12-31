@@ -1,0 +1,26 @@
+version: "3.8"
+
+services:
+  api-gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - PROJECT_NAME=E-commerce Gateway
+      - API_V1_STR=/api/v1
+      - APP_ENV=development
+      - SERVICES__products=http://localhost:8001
+      - PYTHONPATH=/app
+    volumes:
+      - ./src:/app/src
+      - ./pyproject.toml:/app/pyproject.toml
+      - ./uv.lock:/app/uv.lock
+    command: python -m uvicorn src.app.main:app --host 0.0.0.0 --port 8000 --reload
+    networks:
+      - gateway-network
+
+networks:
+  gateway-network:
+    driver: bridge

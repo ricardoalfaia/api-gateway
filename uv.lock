@@ -32,6 +32,7 @@ dependencies = [
     { name = "fastapi", extra = ["all"] },
     { name = "httpx" },
     { name = "python-dotenv" },
+    { name = "uvicorn" },
 ]
 
 [package.metadata]
@@ -39,6 +40,7 @@ requires-dist = [
     { name = "fastapi", extras = ["all"], specifier = ">=0.115.6" },
     { name = "httpx", specifier = ">=0.28.1" },
     { name = "python-dotenv", specifier = ">=1.0.1" },
+    { name = "uvicorn", specifier = ">=0.34.0" },
 ]
 
 [[package]]
