@@ -36,6 +36,9 @@ class Settings(BaseSettings):
     server: ServerConfig
     logging: LoggingConfig
     services: Dict[str, ServiceConfig]
+    
+     # ... suas configurações existentes ...
+    api_keys: List[str] = []
 
     @property
     def PROJECT_NAME(self) -> str:

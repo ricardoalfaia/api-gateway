@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from src.app.core.config.settings import settings
 from src.app.services.proxy.service import ProxyService
 from src.app.api.v1.gateway import router as gateway_router
+from src.app.core.security.middleware import InternalNetworkMiddleware
 from datetime import datetime
 
 app = FastAPI(
@@ -14,6 +15,7 @@ app = FastAPI(
 # CORS configuration
 app.add_middleware(
     CORSMiddleware,
+    InternalNetworkMiddleware,
     allow_origins=settings.cors.allow_origins,
     allow_methods=settings.cors.allow_methods,
     allow_headers=settings.cors.allow_headers,

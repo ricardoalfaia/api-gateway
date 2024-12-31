@@ -76,6 +76,10 @@ class ProxyService:
         headers.pop('host', None)
         headers.pop('content-length', None)
         
+        # Adiciona API key para serviço específico se configurada
+        if service in self.services and 'api_key' in self.services[service]:
+            headers['X-API-Key'] = self.services[service]['api_key']            
+        
         try:
             body = await request.body()
             logger.debug(f"Request body size: {len(body)} bytes")
