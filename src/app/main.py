@@ -60,6 +60,7 @@ async def debug_services():
             "api_key": service.api_key,
             "enabled": service.enabled,
             "timeout": service.timeout
+            # "mtls": service.mtls
         }
         for name, service in settings.services.items()
     }
